@@ -42,9 +42,10 @@ DGTF는 Daniel Kahneman의 "Thinking, Fast and Slow" 이론을 기반으로:
 - 나중에 제거하는 것이 추가하는 것보다 쉬움
 - 언어 독립적 설계
 
-**설계 단계에서 System 1 활용**:
-- 경험과 직관으로 필요한 모든 것을 먼저 나열
-- 전체 그림을 보고 빠진 부분이 없도록 함
+**설계 단계에서 System 2 활성화:**
+- 체계적이고 의식적인 분석으로 전체 체인 파악  
+- 하나씩 꼼꼼히 검토하여 빠진 부분이 없도록 함 
+- 성급한 판단(System 1)을 피하고 신중하게 설계  
 
 #### 2. TFD (Test-First Development)
 
@@ -61,7 +62,6 @@ DGTF는 Daniel Kahneman의 "Thinking, Fast and Slow" 이론을 기반으로:
 #### 3. DGTF (DONT GO TOO FAST)
 
 **핵심 원칙**: "천천히, 하지만 확실하게"
-
 - 성급한 결정과 구현을 피함
 - 명확한 합의 후 진행
 - 자아와 코드를 분리
@@ -79,14 +79,14 @@ DGTF는 Daniel Kahneman의 "Thinking, Fast and Slow" 이론을 기반으로:
 ├─────────────────────────────────────┤
 │                                     │
 │  1. 설계 (ROD)                      │
-│     System 1 활용 ← 경험과 직관     │
-│     "이것도, 저것도 필요"            │
-│     → 완전한 구조                   │
+│     System 2 활성화 ← 체계적 분석    │
+│     "전체를 꼼꼼히 확인"             │
+│     → 완전한 구조                     │
 │                                     │
 │  2. 구현 (DGTF)                     │
-│     System 2 활성화 ← 신중한 사고   │
+│     System 2 유지 ← 신중한 사고     │
 │     "천천히, 하나씩"                │
-│     → 정확한 코드                   │
+│     → 정확한 코드                  │
 │                                     │
 │  3. 검증 (TFD)                      │
 │     System 2 유지 ← 체계적 확인     │
@@ -154,9 +154,10 @@ DGTF is based on Daniel Kahneman's "Thinking, Fast and Slow" theory:
 - Removing is easier than adding later
 - Language-independent design
 
-**Utilizing System 1 in Design Phase**:
-- List everything needed using experience and intuition
-- See the whole picture to ensure nothing is missing
+**Activating System 2 in Design Phase:**
+- Systematically and consciously analyze the entire chain
+- Carefully review each part to ensure nothing is missing
+- Avoid hasty judgments (System 1) and design deliberately
 
 #### 2. TFD (Test-First Development)
 
@@ -191,12 +192,12 @@ DGTF is based on Daniel Kahneman's "Thinking, Fast and Slow" theory:
 ├─────────────────────────────────────┤
 │                                     │
 │  1. Design (ROD)                    │
-│     Use System 1 ← Experience       │
-│     "Need this and that"            │
+│     Activate System 2 ← Systematic  │
+│     "Carefully review everything"   │
 │     → Complete structure            │
 │                                     │
 │  2. Implement (DGTF)                │
-│     Activate System 2 ← Deliberate  │
+│     Keep System 2 ← Deliberate      │
 │     "Slowly, one by one"            │
 │     → Accurate code                 │
 │                                     │
