@@ -735,4 +735,4 @@ Day 5: 리뷰 및 배포
 
 **Remember: DONT GO TOO FAST** ⏱️
 
-다음: [개념과 가치](01-concepts-and-values.md)로 돌아가기
+다음: [개념과 가치](01-concepts-and-values-ko.md)로 돌아가기
