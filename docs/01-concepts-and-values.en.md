@@ -80,27 +80,167 @@ Facing existing code:
 | DDD | Domain modeling | Completeness of responsibility chain |
 | YAGNI | Only what's needed now | Prepare for future needs too |
 
-### Real-World Example
+### Real-World Examples
 
-**Wrong Approach (YAGNI Overconfidence)**:
+#### Example 1: Database Access System
+
+**Wrong Approach (Missing Responsibilities)**:
 ```
-"Only need HTTP now, so let's just build HTTP Listener"
-→ Later need WebSocket
-→ Complete architecture overhaul
-→ Existing code breaks
+Design phase:
+"Query user information" → Seems simple!
+
+What's needed:
+1. Execute query
+2. Return result
+
+Implementation:
+func GetUser(id string) (User, error) {
+    db := sql.Open("mysql", "connection-string")
+    row := db.QueryRow("SELECT * FROM users WHERE id = ?", id)
+    // ...
+}
 ```
 
-**ROD Approach**:
-```
-"Need communication methods":
-1. NetworkListener (interface)
-2. HTTPListener (implementation)
-3. WebSocketListener (implementation - empty is OK)
-4. TCPListener (implementation - empty is OK)
+**Problems**:
+- Create connection every time? (Inefficient)
+- Master/Slave distinction? (Add later)
+- Transactions? (Add later)
+→ Complete refactoring needed later!
 
-→ When WebSocket needed, just fill implementation
-→ No architecture changes
+**ROD Approach (Systematic Analysis)**:
 ```
+Design phase (System 2 activated):
+Carefully analyze "Query user information":
+
+Needed responsibilities (More):
+1. Query execution - QueryExecutor
+2. Result mapping - ResultMapper
+3. ⚠️ Connection provision - ConnectionProvider (Easy to miss!)
+4. ⚠️ DB selection - DatabaseSelector (Master/Slave) (Easy to miss!)
+5. ⚠️ Transaction management - TransactionManager (Easy to miss!)
+6. Error handling - ErrorHandler
+
+Define interface for each responsibility:
+
+type ConnectionProvider interface {
+    GetConnection(ctx context.Context) (*sql.DB, error)
+    ReleaseConnection(conn *sql.DB) error
+}
+
+type DatabaseSelector interface {
+    SelectForRead(ctx context.Context) (*sql.DB, error)
+    SelectForWrite(ctx context.Context) (*sql.DB, error)
+}
+
+type TransactionManager interface {
+    Begin(ctx context.Context) (Transaction, error)
+    Commit(tx Transaction) error
+    Rollback(tx Transaction) error
+}
+```
+
+**Result**:
+→ ConnectionProvider enables pool management
+→ DatabaseSelector enables Master/Slave separation
+→ TransactionManager enables transaction handling
+→ Easy to add features later (no architecture changes)
+
+#### Example 2: Plugin System
+
+**Wrong Approach (Missing Responsibilities)**:
+```
+Design phase:
+"Process images with plugins" → Seems simple!
+
+What's needed:
+1. Load plugins
+2. Process images
+
+Implementation:
+func ProcessImage(img Image) Image {
+    plugins := []ImagePlugin{
+        NewResizePlugin(),
+        NewFilterPlugin(),
+    }
+    for _, p := range plugins {
+        img = p.Process(img)
+    }
+    return img
+}
+```
+
+**Problems**:
+- Code modification needed for new plugins
+- Where to find plugins? (Hardcoded)
+- Plugin validation? (Can we trust them?)
+- Execution order? (Always fixed?)
+→ Complete redesign needed later!
+
+**ROD Approach (Systematic Analysis)**:
+```
+Design phase (System 2 activated):
+Carefully analyze "Process images with plugins":
+
+Needed responsibilities (More):
+1. Plugin execution - PluginExecutor
+2. Image pipeline - ImagePipeline
+3. ⚠️ Plugin discovery - PluginDiscovery (Easy to miss!)
+4. ⚠️ Plugin validation - PluginValidator (Easy to miss!)
+5. ⚠️ Plugin creation - PluginFactory (Easy to miss!)
+6. ⚠️ Plugin registry - PluginRegistry (Easy to miss!)
+7. ⚠️ Execution order resolution - ExecutionOrderResolver (Easy to miss!)
+8. Error handling - ErrorHandler
+
+Define interface for each responsibility:
+
+type PluginDiscovery interface {
+    DiscoverPlugins(path string) ([]PluginMetadata, error)
+    ScanDirectory(dir string) ([]PluginMetadata, error)
+}
+
+type PluginValidator interface {
+    Validate(plugin Plugin) error
+    CheckSignature(plugin Plugin) (bool, error)
+}
+
+type PluginFactory interface {
+    CreatePlugin(metadata PluginMetadata) (Plugin, error)
+}
+
+type PluginRegistry interface {
+    Register(name string, plugin Plugin) error
+    Get(name string) (Plugin, error)
+    List() []string
+}
+
+type ExecutionOrderResolver interface {
+    ResolveOrder(plugins []Plugin) ([]Plugin, error)
+}
+```
+
+**Result**:
+→ PluginDiscovery enables automatic plugin discovery
+→ PluginValidator enables blocking malicious plugins
+→ PluginFactory enables various creation methods
+→ PluginRegistry enables dynamic management
+→ ExecutionOrderResolver enables order changes
+→ Extensibility and security ensured
+
+#### Key Lessons
+
+**Commonly Missed Responsibilities**:
+
+1. **Creation**: Factory, Builder, Constructor
+2. **Discovery/Selection**: Registry, Locator, Selector
+3. **Validation**: Validator, Checker
+4. **Resolution**: Resolver, Router, Dispatcher
+5. **Lifecycle**: Manager, Initializer, Destroyer
+
+When these responsibilities are missed:
+- "Simple approach" chosen during implementation
+- Responsibilities get mixed
+- Changes become impossible later
+- Complete refactoring needed
 
 ---
 
@@ -314,12 +454,12 @@ Moments when DGTF is needed:
 ├─────────────────────────────────────┤
 │                                     │
 │  1. Design (ROD)                    │
-│     Use System 1 ← Experience       │
-│     "Need this and that"            │
+│     Activate System 2 ← Systematic  │
+│     "Carefully review everything"   │
 │     → Complete structure            │
 │                                     │
 │  2. Implement (DGTF)                │
-│     Activate System 2 ← Deliberate  │
+│     Keep System 2 ← Deliberate      │
 │     "Slowly, one by one"            │
 │     → Accurate code                 │
 │                                     │
@@ -408,11 +548,11 @@ DGTF:
 
 ROD, TFD, DGTF are:
 
-✅ **Scientific foundation** - Kahneman's cognitive psychology
-✅ **Field-tested** - Decades of development experience
-✅ **Practical** - Easy to learn and apply
-✅ **Complementary** - Each independent yet work together
-✅ **Universal** - Applicable to all languages and domains
+✅ **Scientific foundation** - Kahneman's cognitive psychology  
+✅ **Field-tested** - Decades of development experience  
+✅ **Practical** - Easy to learn and apply  
+✅ **Complementary** - Each independent yet work together  
+✅ **Universal** - Applicable to all languages and domains  
 
 Core Message:
 
@@ -428,4 +568,4 @@ Core Message:
 
 ## Next Steps
 
-- Learn how to apply in real projects in the [Practical Guide](02-practical-guide-en.md)
+- Learn how to apply in real projects in the [Practical Guide](02-practical-guide.en.md)
