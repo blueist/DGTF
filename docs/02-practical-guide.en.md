@@ -17,7 +17,7 @@
 
 What you need to apply ROD, TFD, DGTF:
 
-✅ **Humility**: "I might not know"  
+✅ **Humility**: "I might not know"   
 ✅ **Patience**: "It's okay to go slowly"  
 ✅ **Openness**: "There might be better ways"  
 ✅ **Discipline**: "Follow principles"  
@@ -47,109 +47,141 @@ Week 4: Integration (all together)
 
 **Bad Example**:
 ```
-"Build user authentication system"
+"Query users from database"
 → Start coding immediately
 ```
 
 **ROD Approach**:
 ```
 1. List entire chain:
-   - Input: User credentials (ID, password)
+   - Input: User ID
    - Processing:
-     * Validate credentials
-     * Create session
-     * Check permissions
-     * Issue token
-   - Output: Authentication token or error
+     * Acquire DB connection
+     * Execute query
+     * Map results
+     * Release connection
+   - Output: User information or error
    
 2. Define each step's responsibility:
-   - AuthenticationService: Validate credentials
-   - SessionManager: Manage sessions
-   - AuthorizationService: Check permissions
-   - TokenGenerator: Generate tokens
+   - ConnectionProvider: Provide/release connections
+   - DatabaseSelector: Select Master/Slave
+   - QueryExecutor: Execute queries
+   - ResultMapper: Convert results
+   - TransactionManager: Manage transactions
+   - ErrorHandler: Handle errors
 ```
 
 ### Step 2: Define Interfaces First
 
 ```go
 // 1. Overall chain interface
-type Authenticator interface {
-    Authenticate(credentials Credentials) (Token, error)
+type UserRepository interface {
+    GetUser(ctx context.Context, id string) (User, error)
+    SaveUser(ctx context.Context, user User) error
 }
 
 // 2. Each responsibility interface
-type CredentialValidator interface {
-    Validate(credentials Credentials) (User, error)
+
+// ⚠️ Easy to miss: Connection provision
+type ConnectionProvider interface {
+    GetConnection(ctx context.Context) (*sql.DB, error)
+    ReleaseConnection(conn *sql.DB) error
 }
 
-type SessionManager interface {
-    CreateSession(user User) (Session, error)
-    GetSession(sessionID string) (Session, error)
-    DestroySession(sessionID string) error
+// ⚠️ Easy to miss: DB selection
+type DatabaseSelector interface {
+    SelectForRead(ctx context.Context) (*sql.DB, error)
+    SelectForWrite(ctx context.Context) (*sql.DB, error)
 }
 
-type AuthorizationChecker interface {
-    CheckPermission(user User, resource string) (bool, error)
+type QueryExecutor interface {
+    Execute(query string, args ...interface{}) (Result, error)
 }
 
-type TokenGenerator interface {
-    GenerateToken(session Session) (Token, error)
-    ValidateToken(token Token) (Session, error)
+type ResultMapper interface {
+    MapToUser(result Result) (User, error)
+}
+
+// ⚠️ Easy to miss: Transaction
+type TransactionManager interface {
+    Begin(ctx context.Context) (Transaction, error)
+    Commit(tx Transaction) error
+    Rollback(tx Transaction) error
 }
 ```
 
 ### Step 3: Create Implementation Chain
 
 ```go
-type DefaultAuthenticator struct {
-    validator  CredentialValidator
-    sessions   SessionManager
-    authorizer AuthorizationChecker
-    tokenGen   TokenGenerator
+type DefaultUserRepository struct {
+    connProvider ConnectionProvider  // ⚠️ Without this, create connection every time
+    dbSelector   DatabaseSelector    // ⚠️ Without this, only use Master
+    executor     QueryExecutor
+    mapper       ResultMapper
+    txManager    TransactionManager  // ⚠️ Without this, no transactions
 }
 
-func (a *DefaultAuthenticator) Authenticate(creds Credentials) (Token, error) {
-    // 1. Validate
-    user, err := a.validator.Validate(creds)
+func (r *DefaultUserRepository) GetUser(ctx context.Context, id string) (User, error) {
+    // 1. Select DB (read from Slave)
+    db, err := r.dbSelector.SelectForRead(ctx)
     if err != nil {
-        return Token{}, err
+        return User{}, err
     }
     
-    // 2. Create session
-    session, err := a.sessions.CreateSession(user)
+    // 2. Execute query
+    result, err := r.executor.Execute(
+        "SELECT * FROM users WHERE id = ?", id,
+    )
     if err != nil {
-        return Token{}, err
+        return User{}, err
     }
     
-    // 3. Issue token
-    token, err := a.tokenGen.GenerateToken(session)
+    // 3. Map result
+    user, err := r.mapper.MapToUser(result)
     if err != nil {
-        return Token{}, err
+        return User{}, err
     }
     
-    return token, nil
+    return user, nil
 }
 ```
 
 ### Step 4: Fill Implementations (Later)
 
 ```go
-// Empty implementation is OK initially
-type SimpleValidator struct{}
-
-func (v *SimpleValidator) Validate(creds Credentials) (User, error) {
-    // TODO: Actual DB validation
-    return User{}, nil
-}
-
-// Add implementation later when needed
-type DatabaseValidator struct {
+// Initially simple implementation
+type SimpleConnectionProvider struct {
     db *sql.DB
 }
 
-func (v *DatabaseValidator) Validate(creds Credentials) (User, error) {
-    // Actual implementation
-    // ...
+func (p *SimpleConnectionProvider) GetConnection(ctx context.Context) (*sql.DB, error) {
+    return p.db, nil
+}
+
+// Add pool later when needed
+type PooledConnectionProvider struct {
+    pool *sql.DB
+}
+
+func (p *PooledConnectionProvider) GetConnection(ctx context.Context) (*sql.DB, error) {
+    // Acquire from pool
+    return p.pool, nil
+}
+
+// Add Master/Slave later
+type MasterSlaveSelector struct {
+    master *sql.DB
+    slaves []*sql.DB
+}
+
+func (s *MasterSlaveSelector) SelectForRead(ctx context.Context) (*sql.DB, error) {
+    // Select one of slaves
+    return s.slaves[rand.Intn(len(s.slaves))], nil
+}
+
+func (s *MasterSlaveSelector) SelectForWrite(ctx context.Context) (*sql.DB, error) {
+    // Always use Master for writes
+    return s.master, nil
 }
 ```
 
@@ -735,4 +767,4 @@ Week 4:
 
 **Remember: DONT GO TOO FAST** ⏱️
 
-Next: Return to [Concepts and Values](01-concepts-and-values-en.md)
+Next: Return to [Concepts and Values](01-concepts-and-values.en.md)
