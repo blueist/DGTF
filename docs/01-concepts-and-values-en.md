@@ -427,4 +427,4 @@ Core Message:
 
 ## Next Steps
 
-- Learn how to apply in real projects in the [Practical Guide](02-practical-guide.en.md)
+- Learn how to apply in real projects in the [Practical Guide](02-practical-guide-en.md)
