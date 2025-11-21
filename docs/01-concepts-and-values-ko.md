@@ -427,4 +427,4 @@ ROD, TFD, DGTF는:
 
 ## 다음 단계
 
-- [실전 가이드](02-practical-guide.md)에서 실제 프로젝트에 적용하는 방법을 배워보세요
+- [실전 가이드](02-practical-guide-ko.md)에서 실제 프로젝트에 적용하는 방법을 배워보세요
