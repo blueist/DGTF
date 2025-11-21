@@ -99,6 +99,9 @@ DGTF는 Daniel Kahneman의 "Thinking, Fast and Slow" 이론을 기반으로:
 
 ### 문서
 
+**시작하기:**
+- [왜 DGTF인가?](docs/00-why-dgtf.ko.md) - 배경과 동기 (세미나 자료 기반)
+
 **빠른 시작:**
 - [개념과 가치](docs/01-concepts-and-values.ko.md) - 핵심 개념 요약
 - [실전 가이드](docs/02-practical-guide.ko.md) - 즉시 적용 가능한 가이드
@@ -216,12 +219,15 @@ DGTF is based on Daniel Kahneman's "Thinking, Fast and Slow" theory:
 
 ### Documentation
 
+**Getting Started:**
+- [Why DGTF?](docs/00-why-dgtf.en.md) - Background and motivation (based on seminar material)
+
 **Quick Start:**
 - [Concepts and Values](docs/01-concepts-and-values.en.md) - Core concepts summary
 - [Practical Guide](docs/02-practical-guide.en.md) - Immediately applicable guide
 
 **In-Depth Learning:**
-- [Deep Dive](docs/03-deep-dive.en.md) - Philosophical background and psychological foundation (Korean only for now)
+- [Deep Dive](docs/03-deep-dive.en.md) - Philosophical background and psychological foundation
 
 ### Who Created This?
 
