@@ -82,25 +82,165 @@ ROD, TFD, DGTF는 수십 년간의 소프트웨어 개발 경험에서 나온 �
 
 ### 실전 예시
 
-**잘못된 접근 (YAGNI 과신)**:
+#### 예시 1: 데이터베이스 접근 시스템
+
+**잘못된 접근 (책임 누락)**:
 ```
-"지금은 HTTP만 필요하니까 HTTP Listener만 만들자"
-→ 나중에 WebSocket 필요
-→ 아키텍처 전면 수정
-→ 기존 코드 깨짐
+설계 단계:
+"사용자 정보 조회" → 간단하네!
+
+필요한 것:
+1. 쿼리 실행
+2. 결과 반환
+
+구현:
+func GetUser(id string) (User, error) {
+    db := sql.Open("mysql", "connection-string")
+    row := db.QueryRow("SELECT * FROM users WHERE id = ?", id)
+    // ...
+}
 ```
 
-**ROD 접근**:
-```
-"통신 방식이 필요하니까":
-1. NetworkListener (인터페이스)
-2. HTTPListener (구현)
-3. WebSocketListener (구현 - 비어있어도 OK)
-4. TCPListener (구현 - 비어있어도 OK)
+**문제 발생**:
+- 연결을 매번 생성? (비효율)
+- Master/Slave 구분은? (나중에 추가)
+- 트랜잭션은? (나중에 추가)
+→ 나중에 전체 리팩토링 필요!
 
-→ 나중에 WebSocket 필요하면 구현만 채우면 됨
-→ 아키텍처 변경 없음
+**ROD 접근 (체계적 분석)**:
 ```
+설계 단계 (System 2 활성화):
+"사용자 정보 조회"를 꼼꼼히 분석:
+
+필요한 책임 (More):
+1. 쿼리 실행 - QueryExecutor
+2. 결과 매핑 - ResultMapper
+3. ⚠️ 연결 제공 - ConnectionProvider (빠뜨리기 쉬움!)
+4. ⚠️ DB 선택 - DatabaseSelector (Master/Slave) (빠뜨리기 쉬움!)
+5. ⚠️ 트랜잭션 관리 - TransactionManager (빠뜨리기 쉬움!)
+6. 에러 처리 - ErrorHandler
+
+각 책임별 인터페이스 정의:
+
+type ConnectionProvider interface {
+    GetConnection(ctx context.Context) (*sql.DB, error)
+    ReleaseConnection(conn *sql.DB) error
+}
+
+type DatabaseSelector interface {
+    SelectForRead(ctx context.Context) (*sql.DB, error)
+    SelectForWrite(ctx context.Context) (*sql.DB, error)
+}
+
+type TransactionManager interface {
+    Begin(ctx context.Context) (Transaction, error)
+    Commit(tx Transaction) error
+    Rollback(tx Transaction) error
+}
+```
+
+**결과**:
+→ ConnectionProvider가 있어서 Pool 관리 가능
+→ DatabaseSelector가 있어서 Master/Slave 분리 가능
+→ TransactionManager가 있어서 트랜잭션 처리 가능
+→ 나중에 기능 추가가 쉬움 (아키텍처 변경 없음)
+
+#### 예시 2: 플러그인 시스템
+
+**잘못된 접근 (책임 누락)**:
+```
+설계 단계:
+"플러그인으로 이미지 처리" → 간단하네!
+
+필요한 것:
+1. 플러그인 로드
+2. 이미지 처리
+
+구현:
+func ProcessImage(img Image) Image {
+    plugins := []ImagePlugin{
+        NewResizePlugin(),
+        NewFilterPlugin(),
+    }
+    for _, p := range plugins {
+        img = p.Process(img)
+    }
+    return img
+}
+```
+
+**문제 발생**:
+- 새 플러그인 추가 시 코드 수정
+- 플러그인을 어디서 찾지? (하드코딩)
+- 플러그인 검증은? (신뢰할 수 있나?)
+- 실행 순서는? (항상 고정?)
+→ 나중에 전체 재설계 필요!
+
+**ROD 접근 (체계적 분석)**:
+```
+설계 단계 (System 2 활성화):
+"플러그인으로 이미지 처리"를 꼼꼼히 분석:
+
+필요한 책임 (More):
+1. 플러그인 실행 - PluginExecutor
+2. 이미지 전달 - ImagePipeline
+3. ⚠️ 플러그인 발견 - PluginDiscovery (빠뜨리기 쉬움!)
+4. ⚠️ 플러그인 검증 - PluginValidator (빠뜨리기 쉬움!)
+5. ⚠️ 플러그인 생성 - PluginFactory (빠뜨리기 쉬움!)
+6. ⚠️ 플러그인 레지스트리 - PluginRegistry (빠뜨리기 쉬움!)
+7. ⚠️ 실행 순서 결정 - ExecutionOrderResolver (빠뜨리기 쉬움!)
+8. 에러 처리 - ErrorHandler
+
+각 책임별 인터페이스 정의:
+
+type PluginDiscovery interface {
+    DiscoverPlugins(path string) ([]PluginMetadata, error)
+    ScanDirectory(dir string) ([]PluginMetadata, error)
+}
+
+type PluginValidator interface {
+    Validate(plugin Plugin) error
+    CheckSignature(plugin Plugin) (bool, error)
+}
+
+type PluginFactory interface {
+    CreatePlugin(metadata PluginMetadata) (Plugin, error)
+}
+
+type PluginRegistry interface {
+    Register(name string, plugin Plugin) error
+    Get(name string) (Plugin, error)
+    List() []string
+}
+
+type ExecutionOrderResolver interface {
+    ResolveOrder(plugins []Plugin) ([]Plugin, error)
+}
+```
+
+**결과**:
+→ PluginDiscovery가 있어서 자동으로 플러그인 발견
+→ PluginValidator가 있어서 악성 플러그인 차단
+→ PluginFactory가 있어서 다양한 방식으로 생성 가능
+→ PluginRegistry가 있어서 동적으로 관리
+→ ExecutionOrderResolver가 있어서 순서 변경 가능
+→ 확장성과 보안성 확보
+
+#### 핵심 교훈
+
+**자주 빠뜨리는 책임들**:
+
+1. **Creation (생성)**: Factory, Builder, Constructor
+2. **Discovery/Selection (발견/선택)**: Registry, Locator, Selector
+3. **Validation (검증)**: Validator, Checker
+4. **Resolution (해결)**: Resolver, Router, Dispatcher
+5. **Lifecycle (생명주기)**: Manager, Initializer, Destroyer
+
+이런 책임들을 놓치면:
+- 구현 단계에서 "간단한 방법" 선택
+- 책임이 섞임
+- 나중에 변경 불가능
+- 전체 리팩토링 필요
 
 ---
 
@@ -314,12 +454,12 @@ DGTF가 필요한 순간:
 ├─────────────────────────────────────┤
 │                                     │
 │  1. 설계 (ROD)                      │
-│     System 1 활용 ← 경험과 직관     │
-│     "이것도, 저것도 필요"            │
+│     System 2 활성화 ← 체계적 분석   │
+│     "전체를 꼼꼼히 확인"             │
 │     → 완전한 구조                   │
 │                                     │
 │  2. 구현 (DGTF)                     │
-│     System 2 활성화 ← 신중한 사고   │
+│     System 2 유지 ← 신중한 사고     │
 │     "천천히, 하나씩"                │
 │     → 정확한 코드                   │
 │                                     │
@@ -428,4 +568,4 @@ ROD, TFD, DGTF는:
 
 ## 다음 단계
 
-- [실전 가이드](02-practical-guide-ko.md)에서 실제 프로젝트에 적용하는 방법을 배워보세요
+- [실전 가이드](02-practical-guide.ko.md)에서 실제 프로젝트에 적용하는 방법을 배워보세요
