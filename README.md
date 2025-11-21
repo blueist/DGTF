@@ -98,8 +98,8 @@ DGTF는 Daniel Kahneman의 "Thinking, Fast and Slow" 이론을 기반으로:
 
 ### 문서
 
-- [개념과 가치](docs/01-concepts-and-values-ko.md) - ROD, TFD, DGTF의 핵심 개념과 철학
-- [실전 가이드](docs/02-practical-guide-ko.md) - 실제 프로젝트에 적용하는 방법
+- [개념과 가치](docs/01-concepts-and-values.ko.md) - ROD, TFD, DGTF의 핵심 개념과 철학
+- [실전 가이드](docs/02-practical-guide.ko.md) - 실제 프로젝트에 적용하는 방법
 
 ### 누가 만들었나?
 
@@ -211,8 +211,8 @@ DGTF is based on Daniel Kahneman's "Thinking, Fast and Slow" theory:
 
 ### Documentation
 
-- [Concepts and Values](docs/01-concepts-and-values-en.md) - Core concepts and philosophy of ROD, TFD, DGTF
-- [Practical Guide](docs/02-practical-guide-en.md) - How to apply in real projects
+- [Concepts and Values](docs/01-concepts-and-values.en.md) - Core concepts and philosophy of ROD, TFD, DGTF
+- [Practical Guide](docs/02-practical-guide.en.md) - How to apply in real projects
 
 ### Who Created This?
 
