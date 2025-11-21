@@ -20,7 +20,7 @@ ROD, TFD, DGTF를 적용하기 위해 필요한 것:
 ✅ **겸손함**: "내가 모를 수 있다"  
 ✅ **인내심**: "천천히 해도 괜찮다"  
 ✅ **개방성**: "더 나은 방법이 있을 수 있다"  
-✅ **규율**: "원칙을 지킨다" 
+✅ **규율**: "원칙을 지킨다"  
 
 ❌ 필요하지 않은 것:
 - 천재적 지능
@@ -47,109 +47,141 @@ ROD, TFD, DGTF를 적용하기 위해 필요한 것:
 
 **나쁜 예**:
 ```
-"사용자 인증 시스템 만들기"
+"데이터베이스에서 사용자 조회"
 → 바로 코딩 시작
 ```
 
 **ROD 접근**:
 ```
 1. 전체 체인 나열:
-   - 입력: 사용자 자격증명 (아이디, 비밀번호)
+   - 입력: 사용자 ID
    - 처리:
-     * 자격증명 검증
-     * 세션 생성
-     * 권한 확인
-     * 토큰 발급
-   - 출력: 인증 토큰 또는 에러
+     * DB 연결 획득
+     * 쿼리 실행
+     * 결과 매핑
+     * 연결 반환
+   - 출력: 사용자 정보 또는 에러
    
 2. 각 단계의 책임 정의:
-   - AuthenticationService: 자격증명 검증
-   - SessionManager: 세션 관리
-   - AuthorizationService: 권한 확인
-   - TokenGenerator: 토큰 생성
+   - ConnectionProvider: 연결 제공/반환
+   - DatabaseSelector: Master/Slave 선택
+   - QueryExecutor: 쿼리 실행
+   - ResultMapper: 결과 변환
+   - TransactionManager: 트랜잭션 관리
+   - ErrorHandler: 에러 처리
 ```
 
 ### Step 2: 인터페이스 먼저 정의
 
 ```go
 // 1. 전체 체인 인터페이스
-type Authenticator interface {
-    Authenticate(credentials Credentials) (Token, error)
+type UserRepository interface {
+    GetUser(ctx context.Context, id string) (User, error)
+    SaveUser(ctx context.Context, user User) error
 }
 
 // 2. 각 책임 인터페이스
-type CredentialValidator interface {
-    Validate(credentials Credentials) (User, error)
+
+// ⚠️ 빠뜨리기 쉬운 책임: 연결 제공
+type ConnectionProvider interface {
+    GetConnection(ctx context.Context) (*sql.DB, error)
+    ReleaseConnection(conn *sql.DB) error
 }
 
-type SessionManager interface {
-    CreateSession(user User) (Session, error)
-    GetSession(sessionID string) (Session, error)
-    DestroySession(sessionID string) error
+// ⚠️ 빠뜨리기 쉬운 책임: DB 선택
+type DatabaseSelector interface {
+    SelectForRead(ctx context.Context) (*sql.DB, error)
+    SelectForWrite(ctx context.Context) (*sql.DB, error)
 }
 
-type AuthorizationChecker interface {
-    CheckPermission(user User, resource string) (bool, error)
+type QueryExecutor interface {
+    Execute(query string, args ...interface{}) (Result, error)
 }
 
-type TokenGenerator interface {
-    GenerateToken(session Session) (Token, error)
-    ValidateToken(token Token) (Session, error)
+type ResultMapper interface {
+    MapToUser(result Result) (User, error)
+}
+
+// ⚠️ 빠뜨리기 쉬운 책임: 트랜잭션
+type TransactionManager interface {
+    Begin(ctx context.Context) (Transaction, error)
+    Commit(tx Transaction) error
+    Rollback(tx Transaction) error
 }
 ```
 
 ### Step 3: 구현 체인 만들기
 
 ```go
-type DefaultAuthenticator struct {
-    validator  CredentialValidator
-    sessions   SessionManager
-    authorizer AuthorizationChecker
-    tokenGen   TokenGenerator
+type DefaultUserRepository struct {
+    connProvider ConnectionProvider  // ⚠️ 없으면 매번 연결 생성
+    dbSelector   DatabaseSelector    // ⚠️ 없으면 Master만 사용
+    executor     QueryExecutor
+    mapper       ResultMapper
+    txManager    TransactionManager  // ⚠️ 없으면 트랜잭션 불가
 }
 
-func (a *DefaultAuthenticator) Authenticate(creds Credentials) (Token, error) {
-    // 1. 검증
-    user, err := a.validator.Validate(creds)
+func (r *DefaultUserRepository) GetUser(ctx context.Context, id string) (User, error) {
+    // 1. DB 선택 (읽기는 Slave)
+    db, err := r.dbSelector.SelectForRead(ctx)
     if err != nil {
-        return Token{}, err
+        return User{}, err
     }
     
-    // 2. 세션 생성
-    session, err := a.sessions.CreateSession(user)
+    // 2. 쿼리 실행
+    result, err := r.executor.Execute(
+        "SELECT * FROM users WHERE id = ?", id,
+    )
     if err != nil {
-        return Token{}, err
+        return User{}, err
     }
     
-    // 3. 토큰 발급
-    token, err := a.tokenGen.GenerateToken(session)
+    // 3. 결과 매핑
+    user, err := r.mapper.MapToUser(result)
     if err != nil {
-        return Token{}, err
+        return User{}, err
     }
     
-    return token, nil
+    return user, nil
 }
 ```
 
 ### Step 4: 구현 채우기 (나중에)
 
 ```go
-// 처음에는 빈 구현도 OK
-type SimpleValidator struct{}
-
-func (v *SimpleValidator) Validate(creds Credentials) (User, error) {
-    // TODO: 실제 DB 검증
-    return User{}, nil
-}
-
-// 나중에 필요하면 구현 추가
-type DatabaseValidator struct {
+// 처음에는 간단한 구현
+type SimpleConnectionProvider struct {
     db *sql.DB
 }
 
-func (v *DatabaseValidator) Validate(creds Credentials) (User, error) {
-    // 실제 구현
-    // ...
+func (p *SimpleConnectionProvider) GetConnection(ctx context.Context) (*sql.DB, error) {
+    return p.db, nil
+}
+
+// 나중에 필요하면 Pool 추가
+type PooledConnectionProvider struct {
+    pool *sql.DB
+}
+
+func (p *PooledConnectionProvider) GetConnection(ctx context.Context) (*sql.DB, error) {
+    // Pool에서 연결 획득
+    return p.pool, nil
+}
+
+// 나중에 Master/Slave 추가
+type MasterSlaveSelector struct {
+    master *sql.DB
+    slaves []*sql.DB
+}
+
+func (s *MasterSlaveSelector) SelectForRead(ctx context.Context) (*sql.DB, error) {
+    // Slave 중 하나 선택
+    return s.slaves[rand.Intn(len(s.slaves))], nil
+}
+
+func (s *MasterSlaveSelector) SelectForWrite(ctx context.Context) (*sql.DB, error) {
+    // 쓰기는 항상 Master
+    return s.master, nil
 }
 ```
 
@@ -735,4 +767,4 @@ Day 5: 리뷰 및 배포
 
 **Remember: DONT GO TOO FAST** ⏱️
 
-다음: [개념과 가치](01-concepts-and-values-ko.md)로 돌아가기
+다음: [개념과 가치](01-concepts-and-values.ko.md)로 돌아가기
