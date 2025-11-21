@@ -42,10 +42,10 @@ DGTF는 Daniel Kahneman의 "Thinking, Fast and Slow" 이론을 기반으로:
 - 나중에 제거하는 것이 추가하는 것보다 쉬움
 - 언어 독립적 설계
 
-**설계 단계에서 System 2 활성화:**
-- 체계적이고 의식적인 분석으로 전체 체인 파악  
-- 하나씩 꼼꼼히 검토하여 빠진 부분이 없도록 함 
-- 성급한 판단(System 1)을 피하고 신중하게 설계  
+**설계 단계에서 System 2 활성화**:
+- 체계적이고 의식적인 분석으로 전체 체인 파악
+- 하나씩 꼼꼼히 검토하여 빠진 부분이 없도록 함
+- 성급한 판단(System 1)을 피하고 신중하게 설계
 
 #### 2. TFD (Test-First Development)
 
@@ -62,6 +62,7 @@ DGTF는 Daniel Kahneman의 "Thinking, Fast and Slow" 이론을 기반으로:
 #### 3. DGTF (DONT GO TOO FAST)
 
 **핵심 원칙**: "천천히, 하지만 확실하게"
+
 - 성급한 결정과 구현을 피함
 - 명확한 합의 후 진행
 - 자아와 코드를 분리
@@ -79,14 +80,14 @@ DGTF는 Daniel Kahneman의 "Thinking, Fast and Slow" 이론을 기반으로:
 ├─────────────────────────────────────┤
 │                                     │
 │  1. 설계 (ROD)                      │
-│     System 2 활성화 ← 체계적 분석    │
+│     System 2 활성화 ← 체계적 분석   │
 │     "전체를 꼼꼼히 확인"             │
-│     → 완전한 구조                     │
+│     → 완전한 구조                   │
 │                                     │
 │  2. 구현 (DGTF)                     │
 │     System 2 유지 ← 신중한 사고     │
 │     "천천히, 하나씩"                │
-│     → 정확한 코드                  │
+│     → 정확한 코드                   │
 │                                     │
 │  3. 검증 (TFD)                      │
 │     System 2 유지 ← 체계적 확인     │
@@ -98,8 +99,12 @@ DGTF는 Daniel Kahneman의 "Thinking, Fast and Slow" 이론을 기반으로:
 
 ### 문서
 
-- [개념과 가치](docs/01-concepts-and-values.ko.md) - ROD, TFD, DGTF의 핵심 개념과 철학
-- [실전 가이드](docs/02-practical-guide.ko.md) - 실제 프로젝트에 적용하는 방법
+**빠른 시작:**
+- [개념과 가치](docs/01-concepts-and-values.ko.md) - 핵심 개념 요약
+- [실전 가이드](docs/02-practical-guide.ko.md) - 즉시 적용 가능한 가이드
+
+**깊이 있는 학습:**
+- [Deep Dive](docs/03-deep-dive.ko.md) - 철학적 배경과 심리학적 근거
 
 ### 누가 만들었나?
 
@@ -154,7 +159,7 @@ DGTF is based on Daniel Kahneman's "Thinking, Fast and Slow" theory:
 - Removing is easier than adding later
 - Language-independent design
 
-**Activating System 2 in Design Phase:**
+**Activating System 2 in Design Phase**:
 - Systematically and consciously analyze the entire chain
 - Carefully review each part to ensure nothing is missing
 - Avoid hasty judgments (System 1) and design deliberately
@@ -211,8 +216,12 @@ DGTF is based on Daniel Kahneman's "Thinking, Fast and Slow" theory:
 
 ### Documentation
 
-- [Concepts and Values](docs/01-concepts-and-values.en.md) - Core concepts and philosophy of ROD, TFD, DGTF
-- [Practical Guide](docs/02-practical-guide.en.md) - How to apply in real projects
+**Quick Start:**
+- [Concepts and Values](docs/01-concepts-and-values.en.md) - Core concepts summary
+- [Practical Guide](docs/02-practical-guide.en.md) - Immediately applicable guide
+
+**In-Depth Learning:**
+- [Deep Dive](docs/03-deep-dive.en.md) - Philosophical background and psychological foundation (Korean only for now)
 
 ### Who Created This?
 
