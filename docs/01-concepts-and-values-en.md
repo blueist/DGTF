@@ -393,13 +393,14 @@ DGTF:
 
 | Methodology | System Used | Reason |
 |------------|-------------|---------|
-| ROD (Design) | System 1 | Quick overview with experience and intuition |
+| ROD (Design) | System 2 | Systematically analyze entire chain, ensure completeness |
 | TFD (Verification) | System 2 | Systematically verify one by one |
 | DGTF (Implementation) | System 2 | Carefully and accurately implement |
 
 **Key Point**: 
-- Utilize System 1 where it's powerful
-- Activate System 2 where System 1 is dangerous
+- Activate System 2 in all phases
+- Avoid hasty judgments from System 1
+- Maintain conscious and systematic thinking
 
 ---
 
